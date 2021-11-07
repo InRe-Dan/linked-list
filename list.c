@@ -22,11 +22,33 @@ typedef struct list list;
 // FUNCTION #1: Create a new empty list and make e the default item that is
 // returned by functions in case no item is selected. No item is selected in an empty list.
 list *newList(item e) {
-  return NULL;
+  node *sentinel = malloc(sizeof(node));
+  sentinel->back = sentinel->next = sentinel;
+  sentinel->x = e;
+
+  list *new_list = malloc(sizeof(list));
+  new_list->none = new_list->current = sentinel;
+  return new_list;
 }
 
 // FUNCTION #2: Free up the list and all the data in it. Does not have to run in O(1).
 void freeList(list *xs) {
+  node *sentinel = xs->none;
+  node *current_node = xs->none;
+  node *previous_node;
+  node *next_node;
+
+  while (1) {
+    next_node = current_node->next;
+    if (next_node == sentinel) {
+      break;
+    }
+    previous_node = current_node;
+    current_node = next_node;
+    free(previous_node);
+  }
+  free(sentinel);
+  free(xs);
 
 }
 
@@ -34,15 +56,25 @@ void freeList(list *xs) {
 // item of the list. If the list has no items the functions do nothing
 // and no item is selected.
 void first(list *xs) {
-
+  if (xs->none == xs->none->next) {
+    return;
+  }
+  xs->current = xs->none->next;
+  return;
 }
 void last(list *xs) {
-
+  if (xs->none == xs->none->next) {
+    return;
+  }
+  xs->current = xs->none->back;
+  return;
 }
+
 
 // FUNCTION #5: Returns true if no item is selected, i.e. the 'none' position. 
 // Otherwise it returns false.
 bool none(list *xs) {
+  if (xs->current == xs->none) return true;
   return false;
 }
 
@@ -51,27 +83,33 @@ bool none(list *xs) {
 // selected and true is returned. If the function is called while no item
 // is selected then the function does nothing and returns false.
 bool after(list *xs) {
-  return false;
-}
+  if (none(xs)) return false;
+  xs->current = xs->current->next;
+  return true;
+ }
 
 // FUNCTION #7: Move the current item one place backwards in the list and return true.
 // If before is called while the first item is the current item, then no item is
 // selected and true is returned. If the function is called while no item
 // is selected then the function does nothing and returns false.
 bool before(list *xs) {
-  return false;
+  if (none(xs)) return false;
+  xs->current = xs->current->back;
+  return true;
 }
 
 // FUNCTION #8: Get the current item. If get is called and no item is selected
 // then the default item is returned.
 item get(list *xs) {
-  return 0;
+  return xs->current->x;
 }
 
 // FUNCTION #9: Set the current item and return true. If set is called while no
 // item is selected then the function does nothing and returns false.
 bool set(list *xs, item x) {
-  return false;
+  if (none(xs)) return false;
+  xs->current->x = x;
+  return true;
 }
 
 // FUNCTION #10: Inserts an item after the current item and makes it the current item.
@@ -79,14 +117,27 @@ bool set(list *xs, item x) {
 // the function inserts the item at the beginning of the list
 // before the first item.
 void insertAfter(list *xs, item x) {
-
+  node *new_node = malloc(sizeof(node));
+  new_node->x = x;
+  new_node->next = xs->current->next;
+  new_node->back = xs->current;
+  new_node->back->next = new_node;
+  new_node->next->back = new_node;
+  xs->current = new_node;
+  
 }
 
 // FUNCTION #11: Inserts an item before the current item and makes it the current item.
 // If insertAfter is called while no item is selected then the function inserts 
 // the item at the end of the list after the last item.
 void insertBefore(list *xs, item x) {
-
+  node *new_node = malloc(sizeof(node));
+  new_node->x = x;
+  new_node->next = xs->current;
+  new_node->back = xs->current->back;
+  new_node->back->next = new_node;
+  new_node->next->back = new_node;
+  xs->current = new_node;
 }
 
 // FUNCTION #12: Delete the current item and make its successor the current item, then
@@ -95,7 +146,14 @@ void insertBefore(list *xs, item x) {
 // If deleteToAfter is called while no item is selected then the
 // function does nothing and returns false.
 bool deleteToAfter(list *xs) {
-  return false;
+  if (none(xs)) return false;
+  node *new_current = xs->current->next;
+  new_current->back = xs->current->back;
+  xs->current->back->next = new_current;
+  node *temp = xs->current;
+  xs->current = new_current;
+  free(temp);
+  return true;
 }
 
 // FUNCTION #13: Delete the current item and make its predecessor the current item, then 
@@ -104,7 +162,14 @@ bool deleteToAfter(list *xs) {
 // If deleteToBefore is called while no item is selected then the
 // function does nothing and returns false.
 bool deleteToBefore(list *xs) {
-  return false;
+  if (none(xs)) return false;
+  node *new_current = xs->current->back;
+  new_current->next = xs->current->next;
+  xs->current->next->back = new_current;
+  node *temp = xs->current;
+  xs->current = new_current;
+  free(temp);
+  return true;
 }
 
 
